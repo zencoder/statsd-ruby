@@ -1,5 +1,4 @@
 require 'socket'
-require 'benchmark'
 
 # = Statsd: A Statsd client (https://github.com/etsy/statsd)
 #
@@ -158,11 +157,10 @@ class Statsd
     def benchmark
       result = nil
 
-      time_in_seconds = Benchmark.realtime do
-        result = yield
-      end
+      start_time = Time.now
+      result = yield
 
-      [(time_in_seconds * 1000).round, result]
+      [((Time.now - start_time) * 1000).round, result]
     end
   end
   include Benchmarking
