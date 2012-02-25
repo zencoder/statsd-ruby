@@ -13,6 +13,12 @@ require 'socket'
 #   statsd = Statsd.new('localhost').tap{|sd| sd.namespace = 'account'}
 #   statsd.increment 'activate'
 class Statsd
+  if defined?(::SystemTimer)
+    Timeout = ::SystemTimer
+  else
+    require 'timeout'
+  end
+
   # A namespace to prepend to all statsd calls.
   attr_reader :namespace
 
@@ -28,9 +34,6 @@ class Statsd
 
     def logger=(logger) #:nodoc:
       @logger = logger
-
-      # Only include logging behavior if a logger is set.
-      include Logging
     end
   end
 
@@ -123,7 +126,7 @@ class Statsd
     result
   end
 
-  private
+private
 
   def send_stats(stat, delta, type, sample_rate=1)
     # Replace Ruby module scoping with '.' and reserved chars (: | @) with underscores.
@@ -131,37 +134,36 @@ class Statsd
 
     if sample_rate == 1 or rand < sample_rate
       rate = "|@#{sample_rate}" unless sample_rate == 1
-      send_to_socket "#{@prefix}#{stat}:#{delta}|#{type}#{rate}"
+      message = "#{@prefix}#{stat}:#{delta}|#{type}#{rate}"
+      send_to_socket(message)
     end
   end
 
-  module Sending
-    def send_to_socket(message)
-      @socket.send(message, 0, @host, @port)
-    end
-  end
-  include Sending
-
-  module Logging
-    def send_to_socket(message)
-      self.class.logger.debug {"Statsd: #{message}"}
-      super
-    rescue => boom
-      self.class.logger.error {"Statsd: #{boom.class} #{boom}"}
-    end
+  def send_to_socket(message)
+    logger.debug "Statsd: #{message}"
+    timeout{ @socket.send(message, 0, @host, @port) }
+  rescue Timeout::Error, SocketError, IOError, SystemCallError => error
+    logger.error "Statsd: #{error.class} #{error.message}"
   end
 
-  module Benchmarking
-    # Benchmarks a block to get the time in ms it took, returning the return
-    # value of the block as well.
-    def benchmark
-      result = nil
+  # Benchmarks a block to get the time in ms it took, returning the return
+  # value of the block as well.
+  def benchmark
+    start_time = Time.now
+    result = yield
 
-      start_time = Time.now
-      result = yield
+    [((Time.now - start_time) * 1000).round, result]
+  end
 
-      [((Time.now - start_time) * 1000).round, result]
+  def timeout
+    Timeout.timeout(0.1){ yield }
+  end
+
+  def logger
+    if self.class.logger
+      self.class.logger
+    else
+      @default_logger ||= Logger.new("/dev/null")
     end
   end
-  include Benchmarking
 end
