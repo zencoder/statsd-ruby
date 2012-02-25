@@ -1,4 +1,5 @@
 require 'socket'
+require 'benchmark'
 
 # = Statsd: A Statsd client (https://github.com/etsy/statsd)
 #
@@ -118,9 +119,8 @@ class Statsd
   # @example Report the time (in ms) taken to activate an account
   #   $statsd.time('account.activate') { @account.activate! }
   def time(stat, sample_rate=1)
-    start = Time.now
-    result = yield
-    timing(stat, ((Time.now - start) * 1000).round, sample_rate)
+    time_in_ms, result = benchmark{ yield }
+    timing(stat, time_in_ms, sample_rate)
     result
   end
 
@@ -151,4 +151,19 @@ class Statsd
       self.class.logger.error {"Statsd: #{boom.class} #{boom}"}
     end
   end
+
+  module Benchmarking
+    # Benchmarks a block to get the time in ms it took, returning the return
+    # value of the block as well.
+    def benchmark
+      result = nil
+
+      time_in_seconds = Benchmark.realtime do
+        result = yield
+      end
+
+      [(time_in_seconds * 1000).round, result]
+    end
+  end
+  include Benchmarking
 end
