@@ -1,13 +1,13 @@
 require 'helper'
 
-describe Statsd::Stub do
-  class Statsd
+describe StatsD::Stub do
+  class StatsD
     # we need to stub this
     attr_accessor :socket
   end
 
   before do
-    @stub = Statsd::Stub.new
+    @stub = StatsD::Stub.new
     @stub.socket = MiniTest::Mock.new
   end
 

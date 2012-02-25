@@ -7,8 +7,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "statsd-ruby"
   gem.homepage = "http://github.com/reinh/statsd"
   gem.license = "MIT"
-  gem.summary = %Q{A Statsd client in Ruby}
-  gem.description = %Q{A Statsd client in Ruby}
+  gem.summary = %Q{A StatsD client in Ruby}
+  gem.description = %Q{A StatsD client in Ruby}
   gem.email = "rein@phpfog.com"
   gem.authors = ["Rein Henrichs"]
   gem.add_development_dependency "minitest", ">= 0"

@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Rein Henrichs"]
   s.date = "2011-12-04"
-  s.description = "A Statsd client in Ruby"
+  s.description = "A StatsD client in Ruby"
   s.email = "rein@phpfog.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.11"
-  s.summary = "A Statsd client in Ruby"
+  s.summary = "A StatsD client in Ruby"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

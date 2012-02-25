@@ -1,18 +1,18 @@
 require 'socket'
 
-# = Statsd: A Statsd client (https://github.com/etsy/statsd)
+# = StatsD: A StatsD client (https://github.com/etsy/statsd)
 #
-# @example Set up a global Statsd client for a server on localhost:9125
-#   $statsd = Statsd.new 'localhost', 8125
+# @example Set up a global StatsD client for a server on localhost:9125
+#   $statsd = StatsD.new 'localhost', 8125
 # @example Send some stats
 #   $statsd.increment 'garets'
 #   $statsd.timing 'glork', 320
 # @example Use {#time} to time the execution of a block
 #   $statsd.time('account.activate') { @account.activate! }
 # @example Create a namespaced statsd client and increment 'account.activate'
-#   statsd = Statsd.new('localhost').tap{|sd| sd.namespace = 'account'}
+#   statsd = StatsD.new('localhost').tap{|sd| sd.namespace = 'account'}
 #   statsd.increment 'activate'
-class Statsd
+class StatsD
   if defined?(::SystemTimer)
     Timeout = ::SystemTimer
   else
@@ -140,10 +140,10 @@ private
   end
 
   def send_to_socket(message)
-    logger.debug "Statsd: #{message}"
+    logger.debug "StatsD: #{message}"
     timeout{ @socket.send(message, 0, @host, @port) }
   rescue Timeout::Error, SocketError, IOError, SystemCallError => error
-    logger.error "Statsd: #{error.class} #{error.message}"
+    logger.error "StatsD: #{error.class} #{error.message}"
   end
 
   # Benchmarks a block to get the time in ms it took, returning the return

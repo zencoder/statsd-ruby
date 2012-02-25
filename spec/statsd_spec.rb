@@ -1,13 +1,13 @@
 require 'helper'
 
-describe Statsd do
-  class Statsd
+describe StatsD do
+  class StatsD
     # we need to stub this
     attr_accessor :socket
   end
 
   before do
-    @statsd = Statsd.new('localhost', 1234)
+    @statsd = StatsD.new('localhost', 1234)
     @statsd.socket = FakeUDPSocket.new
   end
 
@@ -20,7 +20,7 @@ describe Statsd do
     end
 
     it "should default the host to 127.0.0.1 and port to 8125" do
-      statsd = Statsd.new
+      statsd = StatsD.new
       statsd.host.must_equal '127.0.0.1'
       statsd.port.must_equal 8125
     end
@@ -187,18 +187,18 @@ describe Statsd do
 
   describe "with logging" do
     require 'stringio'
-    before { Statsd.logger = Logger.new(@log = StringIO.new)}
+    before { StatsD.logger = Logger.new(@log = StringIO.new)}
 
     it "should write to the log in debug" do
-      Statsd.logger.level = Logger::DEBUG
+      StatsD.logger.level = Logger::DEBUG
 
       @statsd.increment('foobar')
 
-      @log.string.must_match "Statsd: foobar:1|c"
+      @log.string.must_match "StatsD: foobar:1|c"
     end
 
     it "should not write to the log unless debug" do
-      Statsd.logger.level = Logger::INFO
+      StatsD.logger.level = Logger::INFO
 
       @statsd.increment('foobar')
 
@@ -214,10 +214,10 @@ describe Statsd do
     end
 
     it "should replace ruby constant delimeter with graphite package name" do
-      class Statsd::SomeClass; end
-      @statsd.increment(Statsd::SomeClass, 1)
+      class StatsD::SomeClass; end
+      @statsd.increment(StatsD::SomeClass, 1)
 
-      @statsd.socket.recv.must_equal ['Statsd.SomeClass:1|c']
+      @statsd.socket.recv.must_equal ['StatsD.SomeClass:1|c']
     end
 
     it "should replace statsd reserved chars in the stat name" do
@@ -229,14 +229,14 @@ describe Statsd do
 
 end
 
-describe Statsd do
+describe StatsD do
   describe "with a real UDP socket" do
     it "should actually send stuff over the socket" do
       socket = UDPSocket.new
       host, port = 'localhost', 12345
       socket.bind(host, port)
 
-      statsd = Statsd.new(host, port)
+      statsd = StatsD.new(host, port)
       statsd.increment('foobar')
       message = socket.recvfrom(16).first
       message.must_equal 'foobar:1|c'
