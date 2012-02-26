@@ -183,6 +183,21 @@ describe StatsD do
       @statsd.timing('foobar', 500)
       @statsd.socket.recv.must_equal ['service.foobar:500|ms']
     end
+
+    it "should add append a namespace in a block" do
+      @statsd.with_namespace("prod") do |statsd|
+        statsd.timing('foobar', 500)
+      end
+
+      @statsd.socket.recv.must_equal ['service.prod.foobar:500|ms']
+    end
+
+    it "should append a namespace in the returned statsd object" do
+      statsd = @statsd.with_namespace("prod")
+      statsd.timing('foobar', 500)
+
+      @statsd.socket.recv.must_equal ['service.prod.foobar:500|ms']
+    end
   end
 
   describe "with logging" do

@@ -46,8 +46,8 @@ class StatsD
   end
 
   def namespace=(namespace) #:nodoc:
-    @namespace = namespace
-    @prefix = "#{namespace}."
+    @namespace = sanitize(namespace)
+    @prefix = "#{@namespace}."
   end
 
   def host=(host) #:nodoc:
@@ -126,14 +126,49 @@ class StatsD
     result
   end
 
+  # Appends a new namespace onto the existing one in a new object. If a block
+  # is used, the modified StatsD object will be passed in. If a block is
+  # ommitted then the new StatsD object is returned.
+  #
+  # @param [String] namespace namespace to append to the current namespace
+  # @yield The StatsD object with the appended namespace (optional)
+  # @example Getting a StatsD object with an appended namespace
+  #   statsd = StatsD.new
+  #   statsd = statsd.with_namespace("production")
+  #   statsd.namespace == "production" # => true
+  #   statsd = statsd.with_namespace("account")
+  #   statsd.namespace == "production.account" # => true
+  # @example Using a StatsD object with appended namespace in a block
+  #   $statsd = StatsD.new
+  #   $statsd.namespace = "production"
+  #   $statsd.with_namespace("account") {|statsd|
+  #     statsd.time('activate) { @account.activate! } # stat == production.account.activate
+  #     statsd.time('charge')  { @account.charge! }   # stat == production.account.charge
+  #     statsd.time('notify')  { @account.notify! }   # stat == production.account.notify
+  #   }
+  def with_namespace(namespace)
+    statsd = dup
+
+    if statsd.namespace
+      statsd.namespace = "#{statsd.namespace}.#{namespace}"
+    else
+      statsd.namespace = namespace
+    end
+
+    if block_given?
+      yield statsd
+    else
+      statsd
+    end
+  end
+
 private
 
   def send_stats(stat, delta, type, sample_rate=1)
-    # Replace Ruby module scoping with '.' and reserved chars (: | @) with underscores.
-    stat = stat.to_s.gsub('::', '.').tr(':|@', '_')
+    stat = sanitize(stat)
 
     if sample_rate == 1 or rand < sample_rate
-      rate = "|@#{sample_rate}" unless sample_rate == 1
+      rate    = "|@#{sample_rate}" unless sample_rate == 1
       message = "#{@prefix}#{stat}:#{delta}|#{type}#{rate}"
       send_to_socket(message)
     end
@@ -165,5 +200,10 @@ private
     else
       @default_logger ||= Logger.new("/dev/null")
     end
+  end
+
+  # Replace Ruby module scoping with '.' and reserved chars (: | @) with underscores.
+  def sanitize(string)
+    string.to_s.gsub('::', '.').tr(':|@', '_')
   end
 end
