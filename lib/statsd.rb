@@ -1,4 +1,6 @@
 require 'socket'
+require 'timeout'
+require 'logger'
 
 # = StatsD: A StatsD client (https://github.com/etsy/statsd)
 #
@@ -14,11 +16,7 @@ require 'socket'
 #   statsd = StatsD.new('localhost').tap{|sd| sd.namespace = 'account'}
 #   statsd.increment 'activate'
 class StatsD
-  if defined?(::SystemTimer)
-    Timeout = ::SystemTimer
-  else
-    require 'timeout'
-  end
+  Timeout = defined?(::SystemTimer) ? ::SystemTimer : ::Timeout
 
   # A namespace to prepend to all statsd calls.
   attr_reader :namespace
@@ -174,10 +172,10 @@ private
   end
 
   def send_message(message)
-    self.class.logger.debug "[StatsD] #{message}"
+    logger.debug "[StatsD] #{message}"
     timeout{ send_to_socket(message) }
-  rescue Timeout::Error, SocketError, IOError, SystemCallError => error
-    self.class.logger.error "[StatsD] #{error.class} #{error.message}"
+  rescue ::Timeout::Error, SocketError, IOError, SystemCallError => error
+    logger.error "[StatsD] #{error.class} #{error.message}"
   end
 
   def send_to_socket(message)
@@ -200,5 +198,9 @@ private
   # Replace Ruby module scoping with '.' and reserved chars (: | @) with underscores.
   def sanitize(string)
     string.to_s.gsub('::', '.').tr(':|@', '_')
+  end
+
+  def logger
+    ::StatsD.logger
   end
 end
