@@ -30,9 +30,13 @@ class StatsD
   class << self
     # Set to a standard logger instance to enable debug logging.
     attr_accessor :logger
+
+    # The logging method to use for normal messages. Defaults to :debug
+    attr_accessor :log_level
   end
 
-  self.logger = Logger.new(RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null')
+  self.logger    = Logger.new(RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null')
+  self.log_level = :debug
 
   # @param [String] host your statsd host
   # @param [Integer] port your statsd port
@@ -172,10 +176,10 @@ private
   end
 
   def send_message(message)
-    logger.debug "[StatsD] #{message}"
+    logger.send(log_level, "[StatsD] #{message}")
     timeout{ send_to_socket(message) }
   rescue ::Timeout::Error, SocketError, IOError, SystemCallError => error
-    logger.error "[StatsD] #{error.class} #{error.message}"
+    logger.error("[StatsD] #{error.class} #{error.message}")
   end
 
   def send_to_socket(message)
@@ -202,5 +206,9 @@ private
 
   def logger
     ::StatsD.logger
+  end
+
+  def log_level
+    ::StatsD.log_level
   end
 end
