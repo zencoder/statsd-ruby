@@ -184,6 +184,11 @@ describe StatsD do
       @statsd.socket.recv.must_equal ['service.foobar:500|ms']
     end
 
+    it "should add namespace to gauge" do
+      @statsd.gauge('foobar', 1000)
+      @statsd.socket.recv.must_equal ['service.foobar:1000|g']
+    end
+
     it "should add append a namespace in a block" do
       @statsd.with_namespace("prod") do |statsd|
         statsd.timing('foobar', 500)
