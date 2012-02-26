@@ -171,15 +171,19 @@ private
     if sample_rate == 1 or rand < sample_rate
       rate    = "|@#{sample_rate}" unless sample_rate == 1
       message = "#{@prefix}#{stat}:#{delta}|#{type}#{rate}"
-      send_to_socket(message)
+      send_message(message)
     end
   end
 
-  def send_to_socket(message)
+  def send_message(message)
     logger.debug "[StatsD] #{message}"
-    timeout{ @socket.send(message, 0, @host, @port) }
+    timeout{ send_to_socket(message) }
   rescue Timeout::Error, SocketError, IOError, SystemCallError => error
     logger.error "[StatsD] #{error.class} #{error.message}"
+  end
+
+  def send_to_socket(message)
+    @socket.send(message, 0, @host, @port)
   end
 
   # Benchmarks a block to get the time in ms it took, returning the return
