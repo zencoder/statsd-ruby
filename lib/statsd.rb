@@ -31,12 +31,10 @@ class StatsD
 
   class << self
     # Set to a standard logger instance to enable debug logging.
-    attr_reader :logger
-
-    def logger=(logger) #:nodoc:
-      @logger = logger
-    end
+    attr_accessor :logger
   end
+
+  self.logger = Logger.new(RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null')
 
   # @param [String] host your statsd host
   # @param [Integer] port your statsd port
@@ -176,10 +174,10 @@ private
   end
 
   def send_message(message)
-    logger.debug "[StatsD] #{message}"
+    self.class.logger.debug "[StatsD] #{message}"
     timeout{ send_to_socket(message) }
   rescue Timeout::Error, SocketError, IOError, SystemCallError => error
-    logger.error "[StatsD] #{error.class} #{error.message}"
+    self.class.logger.error "[StatsD] #{error.class} #{error.message}"
   end
 
   def send_to_socket(message)
@@ -197,14 +195,6 @@ private
 
   def timeout
     Timeout.timeout(0.1){ yield }
-  end
-
-  def logger
-    if self.class.logger
-      self.class.logger
-    else
-      @default_logger ||= Logger.new("/dev/null")
-    end
   end
 
   # Replace Ruby module scoping with '.' and reserved chars (: | @) with underscores.
