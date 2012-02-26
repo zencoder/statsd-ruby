@@ -209,7 +209,7 @@ describe StatsD do
 
       @statsd.increment('foobar')
 
-      @log.string.must_match "StatsD: foobar:1|c"
+      @log.string.must_match "[StatsD] foobar:1|c"
     end
 
     it "should not write to the log unless debug" do

@@ -175,10 +175,10 @@ private
   end
 
   def send_to_socket(message)
-    logger.debug "StatsD: #{message}"
+    logger.debug "[StatsD] #{message}"
     timeout{ @socket.send(message, 0, @host, @port) }
   rescue Timeout::Error, SocketError, IOError, SystemCallError => error
-    logger.error "StatsD: #{error.class} #{error.message}"
+    logger.error "[StatsD] #{error.class} #{error.message}"
   end
 
   # Benchmarks a block to get the time in ms it took, returning the return
