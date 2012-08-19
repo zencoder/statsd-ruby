@@ -113,6 +113,19 @@ class StatsD
     send_stats stat, ms, :ms, sample_rate
   end
 
+  # Sends a timing (in ms) between two time values for the given stat to the
+  # statsd server. The sample_rate determines what percentage of the time this
+  # report is sent. The statsd server then uses the sample_rate to correctly
+  # track the average timing for the stat.
+  #
+  # @param [String] stat stat name
+  # @param [Time] from the start time for the stat
+  # @param [Time] to the end time for the stat
+  # @param [Numeric] sample_rate sample rate, 1 for always
+  def timing_between(stat, from, to, sample_rate=1)
+    send_stats stat, time_beween_in_ms(from, to), :ms, sample_rate
+  end
+
   # Reports execution time of the provided block using {#timing}.
   #
   # @param [String] stat stat name
@@ -192,7 +205,7 @@ private
     start_time = Time.now
     result = yield
 
-    [((Time.now - start_time) * 1000).round, result]
+    [time_beween_in_ms(start_time, Time.now), result]
   end
 
   def timeout
@@ -210,5 +223,9 @@ private
 
   def log_level
     ::StatsD.log_level
+  end
+
+  def time_beween_in_ms(from, to)
+    ((to - from) * 1000).abs.round
   end
 end

@@ -112,6 +112,25 @@ describe StatsD do
     end
   end
 
+  describe "#timing_between" do
+    it "should format the message according to the statsd spec" do
+      from = Time.now
+      to   = from + 0.5
+      @statsd.timing_between('foobar', from, to)
+      @statsd.socket.recv.must_equal ['foobar:500|ms']
+    end
+
+    describe "with a sample rate" do
+      before { class << @statsd; def rand; 0; end; end } # ensure delivery
+      it "should format the message according to the statsd spec" do
+        from = Time.now
+        to   = from + 0.5
+        @statsd.timing_between('foobar', from, to, 0.5)
+        @statsd.socket.recv.must_equal ['foobar:500|ms|@0.5']
+      end
+    end
+  end
+
   describe "#time" do
     it "should format the message according to the statsd spec" do
       @statsd.time('foobar') { sleep(0.001); 'test' }
